@@ -13,18 +13,49 @@ import {
     LogOut,
     ChevronRight,
 } from "lucide-react";
+import React, { use, useEffect, useState } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { fetchNotOpenedRequestsCount } from "@/lib/services/requests";
+import { supabase } from "@/lib/supabase/client";
+import QUERY_KEYS from "@/constants/queryKeys";
 
-const NAV = [
-    { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Requests", href: "/requests", icon: Inbox, badge: 2 },
-    { label: "Customers", href: "/customers", icon: Users },
-    { label: "Plans", href: "/plans", icon: CreditCard },
-    { label: "Usage", href: "/usage", icon: BarChart3 },
-    { label: "Settings", href: "/settings", icon: Settings },
-];
 
 export default function Sidebar() {
     const pathname = usePathname();
+        const queryClient = useQueryClient();
+        const { data: requestCount = 0 } = useQuery<number, unknown>({
+            queryKey: [QUERY_KEYS.GET_NOT_OPENED_REQUESTS_COUNT],
+            queryFn: fetchNotOpenedRequestsCount,
+            refetchOnWindowFocus: false,
+        });
+
+    
+    useEffect(() => {
+        const channel = supabase.channel(`requests`).subscribe((status) => {
+            if (status === "SUBSCRIBED") {
+                console.log("Subscribed to requests channel");
+            }
+        });
+        
+        channel.on("broadcast", { event: "new-request" }, (payload) => {
+            const newCount = Number(payload?.payload?.newRequests ?? 1);
+            // update the react-query cache so consumers reflect the latest value
+            queryClient.setQueryData([QUERY_KEYS.GET_NOT_OPENED_REQUESTS_COUNT], newCount);
+        });
+        
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
+    
+    const NAV = React.useMemo(() => [
+        { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+        { label: "Requests", href: "/requests", icon: Inbox, badge: requestCount },
+        { label: "Customers", href: "/customers", icon: Users },
+        { label: "Plans", href: "/plans", icon: CreditCard },
+        { label: "Usage", href: "/usage", icon: BarChart3 },
+        { label: "Settings", href: "/settings", icon: Settings },
+    ], [requestCount]);
 
     return (
         <aside
@@ -89,7 +120,7 @@ export default function Sidebar() {
                         >
                             <Icon size={16} strokeWidth={2} />
                             <span style={{ flex: 1 }}>{label}</span>
-                            {badge && (
+                            {(badge ?? 0) > 0 && (
                                 <span
                                     style={{
                                         background: "var(--danger)",
