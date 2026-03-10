@@ -4,7 +4,7 @@ import ReactQueryProvider from "@/lib/queryClient";
 
 export const metadata: Metadata = {
   title: "WhatsApp Admin Panel — Inventory Manager",
-  description: "SaaS-style admin dashboard for managing WhatsApp notification licenses, customers, plans, and usage analytics.",
+  description: "SaaS-style admin dashboard for managing WhatsApp notification licenses and customers.",
 };
 
 export default function RootLayout({

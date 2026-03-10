@@ -46,7 +46,7 @@ export default function LoginPage() {
                 localStorage.setItem("user_role", role);
 
                 // 4. Redirect to dashboard
-                router.push("/dashboard");
+                router.push("/requests");
             } else {
                 // 5. Handle errors from backend (e.g. "Incorrect email or password")
                 setError(result.message || "Login failed. Please check your credentials.");
@@ -257,19 +257,6 @@ export default function LoginPage() {
                         color: "var(--text-dim)",
                     }}
                 >
-                    <div style={{ marginBottom: "0.75rem" }}>
-                        Don't have an account?{" "}
-                        <Link
-                            href="/register"
-                            style={{
-                                color: "var(--brand-primary)",
-                                fontWeight: 600,
-                                textDecoration: "none"
-                            }}
-                        >
-                            Create one
-                        </Link>
-                    </div>
                     <div style={{ fontSize: 12, opacity: 0.8 }}>
                         Inventory Manager &copy; 2026 &mdash; Admin Panel v1.1
                     </div>

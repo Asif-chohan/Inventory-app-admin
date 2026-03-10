@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 interface HeaderProps {
     title: string;
@@ -41,7 +41,7 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
                 </div>
 
                 {/* Notifications */}
-                <button className="btn-icon" style={{ position: "relative" }}>
+                {/* <button className="btn-icon" style={{ position: "relative" }}>
                     <Bell size={16} />
                     <span
                         style={{
@@ -53,7 +53,7 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
                             border: "1.5px solid var(--bg-primary)",
                         }}
                     />
-                </button>
+                </button> */}
 
                 {actions}
             </div>

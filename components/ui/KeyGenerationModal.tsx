@@ -10,42 +10,43 @@ interface KeyGenerationModalProps {
     customerName: string;
 }
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { generateCustomerKey } from "@/lib/services/customers";
+import QUERY_KEYS from "@/constants/queryKeys";
+
 export default function KeyGenerationModal({ isOpen, onClose, customerId, customerName }: KeyGenerationModalProps) {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
     const [name, setName] = useState("");
-    const [loading, setLoading] = useState(false);
     const [generatedKey, setGeneratedKey] = useState<string | null>(null);
     const [copied, setCopied] = useState(false);
     const [error, setError] = useState("");
+
+    const queryClient = useQueryClient();
+
+    const mutation = useMutation({
+        mutationFn: () => generateCustomerKey(customerId, name),
+        onSuccess: (result) => {
+            if (result.success) {
+                setGeneratedKey(result.data.clientKey);
+                queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_CUSTOMER_KEYS, customerId] });
+            } else {
+                setError(result.message || "Failed to generate key");
+            }
+        },
+        onError: (err) => {
+            setError("Could not connect to the server.");
+            console.error(err);
+        }
+    });
 
     if (!isOpen) return null;
 
     const handleGenerate = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
         setError("");
-        try {
-            const response = await fetch(`${apiBase}/admin/customers/${customerId}/keys`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
-                },
-                body: JSON.stringify({ name }),
-            });
-            const result = await response.json();
-            if (result.success) {
-                setGeneratedKey(result.data.clientKey);
-            } else {
-                setError(result.message || "Failed to generate key");
-            }
-        } catch (err) {
-            setError("Could not connect to the server.");
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
+        mutation.mutate();
     };
+
+    const loading = mutation.isPending;
 
     const handleCopy = () => {
         if (generatedKey) {

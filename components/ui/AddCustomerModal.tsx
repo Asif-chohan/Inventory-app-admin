@@ -3,15 +3,18 @@
 import { useState, useEffect } from "react";
 import { X, User, Mail, Phone, Shield, BarChart3, MessageSquare, AlertCircle, CheckCircle } from "lucide-react";
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createCustomer, updateCustomer } from "@/lib/services/customers";
+import QUERY_KEYS from "@/constants/queryKeys";
+
 interface AddCustomerModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onSuccess: (newCustomer: any) => void;
+    onSuccess: (newCustomer?: any) => void;
     customerToEdit?: any;
 }
 
 export default function AddCustomerModal({ isOpen, onClose, onSuccess, customerToEdit }: AddCustomerModalProps) {
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [formData, setFormData] = useState({
         name: "",
@@ -23,7 +26,41 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, customerT
         channels: ["whatsapp"] as string[],
     });
 
+    const queryClient = useQueryClient();
     const isEditing = !!customerToEdit;
+
+    const mutation = useMutation({
+        mutationFn: (payload: any) => isEditing
+            ? updateCustomer(customerToEdit.id, payload)
+            : createCustomer(payload),
+        onSuccess: (result) => {
+            if (result.success) {
+                queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LIST_CUSTOMERS] });
+                if (isEditing) {
+                    queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_CUSTOMER, customerToEdit.id] });
+                }
+                onSuccess(result.data);
+                onClose();
+                if (!isEditing) {
+                    setFormData({
+                        name: "",
+                        email: "",
+                        phone: "",
+                        status: "active",
+                        plan_name: "Starter",
+                        monthly_limit: 50,
+                        channels: ["whatsapp"],
+                    });
+                }
+            } else {
+                setError(result.message || `Failed to ${isEditing ? 'update' : 'create'} customer`);
+            }
+        },
+        onError: (err: any) => {
+            setError("Could not connect to the server.");
+            console.error(`${isEditing ? 'Update' : 'Create'} Customer Error:`, err);
+        }
+    });
 
     useEffect(() => {
         if (customerToEdit) {
@@ -59,63 +96,23 @@ export default function AddCustomerModal({ isOpen, onClose, onSuccess, customerT
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
-        setLoading(true);
 
-        try {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-            const url = isEditing
-                ? `${apiBase}/admin/customers/${customerToEdit.id}`
-                : `${apiBase}/admin/customers`;
-            const method = isEditing ? "PUT" : "POST";
-
-            const payload = {
-                name: formData.name,
-                email: formData.email,
-                phone: formData.phone,
-                status: formData.status,
-                plan: {
-                    name: formData.plan_name,
-                    monthlyLimit: formData.monthly_limit,
-                    channels: formData.channels
-                }
-            };
-
-            const response = await fetch(url, {
-                method: method,
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
-                },
-                body: JSON.stringify(payload),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                onSuccess(result.data);
-                onClose();
-                if (!isEditing) {
-                    // Reset form only on create
-                    setFormData({
-                        name: "",
-                        email: "",
-                        phone: "",
-                        status: "active",
-                        plan_name: "Starter",
-                        monthly_limit: 50,
-                        channels: ["whatsapp"],
-                    });
-                }
-            } else {
-                setError(result.message || `Failed to ${isEditing ? 'update' : 'create'} customer`);
+        const payload = {
+            name: formData.name,
+            email: formData.email,
+            phone: formData.phone,
+            status: formData.status,
+            plan: {
+                name: formData.plan_name,
+                monthlyLimit: formData.monthly_limit,
+                channels: formData.channels
             }
-        } catch (err) {
-            setError("Could not connect to the server.");
-            console.error(`${isEditing ? 'Update' : 'Create'} Customer Error:`, err);
-        } finally {
-            setLoading(false);
-        }
+        };
+
+        mutation.mutate(payload);
     };
+
+    const loading = mutation.isPending;
 
     const toggleChannel = (channel: string) => {
         setFormData(prev => ({

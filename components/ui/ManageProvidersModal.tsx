@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Settings, Shield, AlertCircle, CheckCircle, Smartphone, MessageCircle, Eye, EyeOff, Save, Loader2 } from "lucide-react";
+import { X, Settings, AlertCircle, Smartphone, MessageCircle, Eye, EyeOff, Save, Loader2 } from "lucide-react";
 
 interface ManageProvidersModalProps {
     isOpen: boolean;
@@ -53,12 +53,33 @@ interface ProvidersDataInternal {
     };
 }
 
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { updateCustomerProviders } from "@/lib/services/customers";
+import QUERY_KEYS from "@/constants/queryKeys";
+
 export default function ManageProvidersModal({ isOpen, onClose, customerId, customerName, initialData, onSuccess, allowedChannels = ["whatsapp", "sms"] }: ManageProvidersModalProps) {
-    const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
     const [activeTab, setActiveTab] = useState<"whatsapp" | "sms">("whatsapp");
-    const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [showToken, setShowToken] = useState({ whatsapp: false, sms: false });
+
+    const queryClient = useQueryClient();
+
+    const mutation = useMutation({
+        mutationFn: (data: any) => updateCustomerProviders(customerId, data),
+        onSuccess: (result) => {
+            if (result.success) {
+                queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.GET_CUSTOMER_PROVIDERS, customerId] });
+                onSuccess();
+                onClose();
+            } else {
+                setError(result.message || "Failed to update providers");
+            }
+        },
+        onError: (err) => {
+            setError("Could not connect to the server.");
+            console.error(err);
+        }
+    });
 
     useEffect(() => {
         if (allowedChannels.length > 0 && !allowedChannels.includes(activeTab)) {
@@ -119,31 +140,11 @@ export default function ManageProvidersModal({ isOpen, onClose, customerId, cust
     if (!isOpen) return null;
 
     const handleSave = async () => {
-        setLoading(true);
         setError("");
-        try {
-            const response = await fetch(`${apiBase}/admin/customers/${customerId}/providers`, {
-                method: "PUT",
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${localStorage.getItem("auth_token")}`,
-                },
-                body: JSON.stringify(formData),
-            });
-            const result = await response.json();
-            if (result.success) {
-                onSuccess();
-                onClose();
-            } else {
-                setError(result.message || "Failed to update providers");
-            }
-        } catch (err) {
-            setError("Could not connect to the server.");
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
+        mutation.mutate(formData);
     };
+
+    const loading = mutation.isPending;
 
     const updateWhatsApp = (field: string, value: string) => {
         setFormData(prev => ({
