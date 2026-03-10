@@ -340,9 +340,10 @@ export default function ManageProvidersModal({ isOpen, onClose, customerId, cust
                             <div className="form-group" style={{ marginBottom: "1.25rem" }}>
                                 <label className="form-label">Provider</label>
                                 <select
-                                    className="input"
+                                    className="input cursor-not-allowed"
                                     value={formData.sms.provider}
                                     onChange={(e) => updateSMS("provider", e.target.value)}
+                                    disabled
                                 >
                                     <option value="twilio">Twilio</option>
                                     <option value="vonage">Vonage</option>

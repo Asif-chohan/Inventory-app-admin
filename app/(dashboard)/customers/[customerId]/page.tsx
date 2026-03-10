@@ -82,13 +82,13 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ custo
         }
     });
 
-    const deleteCustomerMutation = useMutation({
-        mutationFn: () => deleteCustomer(customerId),
-        onSuccess: () => {
-            router.push("/customers");
-            queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LIST_CUSTOMERS] });
-        }
-    });
+    // const deleteCustomerMutation = useMutation({
+    //     mutationFn: () => deleteCustomer(customerId),
+    //     onSuccess: () => {
+    //         router.push("/customers");
+    //         queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LIST_CUSTOMERS] });
+    //     }
+    // });
 
     const revokeKeyMutation = useMutation({
         mutationFn: (keyId: string) => revokeCustomerKey(keyId),
@@ -118,10 +118,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ custo
         await updateStatusMutation.mutateAsync(newStatus);
     };
 
-    const handleDelete = async () => {
-        if (!confirm("Are you sure you want to delete this customer? This action cannot be undone.")) return;
-        await deleteCustomerMutation.mutateAsync();
-    };
+    // const handleDelete = async () => {
+    //     if (!confirm("Are you sure you want to delete this customer? This action cannot be undone.")) return;
+    //     await deleteCustomerMutation.mutateAsync();
+    // };
 
     const handleRevokeKey = async (keyId: string) => {
         if (!keyId) return;
@@ -202,7 +202,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ custo
                     <CustomerInfoCard
                         customer={customer}
                         onEdit={() => setIsEditModalOpen(true)}
-                        onDelete={handleDelete}
+                        // onDelete={handleDelete}
                         onStatusUpdate={handleUpdateStatus}
                     />
 

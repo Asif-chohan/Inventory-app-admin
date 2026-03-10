@@ -7,7 +7,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 interface CustomerInfoCardProps {
     customer: Customer;
     onEdit: () => void;
-    onDelete: () => void;
+    onDelete?: () => void;
     onStatusUpdate: (newStatus: string) => void;
 }
 
@@ -39,12 +39,12 @@ export default function CustomerInfoCard({ customer, onEdit, onDelete, onStatusU
                         >
                             <Edit size={12} /> Edit
                         </button>
-                        <button
+                        {/* <button
                             className="btn btn-danger btn-sm"
                             onClick={onDelete}
                         >
                             <Trash2 size={12} /> Delete
-                        </button>
+                        </button> */}
                     </div>
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: "0.6rem" }}>

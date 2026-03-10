@@ -1,7 +1,5 @@
 "use client";
 
-import { Search } from "lucide-react";
-
 interface HeaderProps {
     title: string;
     subtitle?: string;
@@ -31,14 +29,14 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
                 {/* Search */}
-                <div className="input-group" style={{ width: 220 }}>
+                {/* <div className="input-group" style={{ width: 220 }}>
                     <Search size={14} className="input-icon" />
                     <input
                         className="input input-with-icon"
                         placeholder="Quick search..."
                         style={{ height: 34, fontSize: 12 }}
                     />
-                </div>
+                </div> */}
 
                 {/* Notifications */}
                 {/* <button className="btn-icon" style={{ position: "relative" }}>

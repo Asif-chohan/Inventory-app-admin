@@ -25,9 +25,8 @@ export default function LoginPage() {
         setLoading(true);
 
         try {
-            const apiBase = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
-            // 1. Call your real backend (Assuming it's on localhost:3000)
-            const response = await fetch(`${apiBase}/auth/login`, {
+            // Call internal proxy that will set HttpOnly cookie
+            const response = await fetch(`/api/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -36,19 +35,10 @@ export default function LoginPage() {
             });
 
             const result = await response.json();
-            console.log("the result is ", result)
             if (response.ok && result.success) {
-                // 2. Extract token and user info from result.data
-                const { token, role } = result.data;
-
-                // 3. Store the token for future authenticated requests
-                localStorage.setItem("auth_token", token);
-                localStorage.setItem("user_role", role);
-
-                // 4. Redirect to dashboard
+                // Redirect to dashboard
                 router.push("/requests");
             } else {
-                // 5. Handle errors from backend (e.g. "Incorrect email or password")
                 setError(result.message || "Login failed. Please check your credentials.");
             }
         } catch (err) {
@@ -130,7 +120,7 @@ export default function LoginPage() {
                             marginBottom: "0.3rem",
                         }}
                     >
-                        WhatsApp Admin Panel
+                        Admin Panel
                     </h1>
                     <p style={{ fontSize: 13, color: "var(--text-muted)" }}>
                         Sign in to manage licenses & customers

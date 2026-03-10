@@ -12,7 +12,7 @@ import { timeAgo } from "@/lib/utils";
  */
 export const getCustomerColumns = (
     handleEditCustomerClick: (customer: any) => void,
-    handleDelete: (id: string) => void
+    // handleDelete: (id: string) => void
 ) => [
         {
             header: "Customer",
@@ -81,9 +81,9 @@ export const getCustomerColumns = (
                     <button className="btn-icon" title="Edit Customer" onClick={() => handleEditCustomerClick(c)}>
                         <Edit size={14} />
                     </button>
-                    <button onClick={() => handleDelete(c.id)} className="btn-icon" title="Delete Customer" style={{ color: "var(--danger)" }}>
+                    {/* <button onClick={() => handleDelete(c.id)} className="btn-icon" title="Delete Customer" style={{ color: "var(--danger)" }}>
                         <Trash2 size={14} />
-                    </button>
+                    </button> */}
                 </div>
             ),
         },
@@ -104,7 +104,11 @@ export const getRequestColumns = (handlers: {
 }) => [
         {
             header: "#",
-            accessor: (item: any, index?: number) => index !== undefined ? index + 1 : "",
+            accessor: (item: any, index?: number) => {
+                console.log("Index in accessor:", index);
+                console.log("Item in accessor:", item);
+                return index !== undefined ? index + 1 : "";
+            },
             cellStyle: { color: "var(--text-dim)", fontSize: 12 },
         },
         {
@@ -150,9 +154,9 @@ export const getRequestColumns = (handlers: {
                             </button>
                         </>
                     )}
-                    <button className="btn-icon" onClick={() => handlers.onView(req)}>
+                    {/* <button className="btn-icon" onClick={() => handlers.onView(req)}>
                         <Eye size={14} />
-                    </button>
+                    </button> */}
                     <button className="btn-icon" style={{ color: "var(--danger)" }} onClick={() => handlers.onDelete(req.id)}>
                         {handlers.isDeleting(req.id) ? (
                             <Circle size={12} className="animate-spin" />

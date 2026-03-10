@@ -16,6 +16,7 @@ type StatusFilter = "all" | "active" | "inactive" | "paused";
 type PlanFilter = "all" | "Starter" | "Business" | "Pro" | "Enterprise";
 
 import { getCustomerColumns } from "@/constants/tableColumns";
+import { CustomerStatus } from "@/lib/enums";
 
 export default function CustomersPage() {
     const [page, setPage] = useState(1);
@@ -39,6 +40,8 @@ export default function CustomersPage() {
     const pagination = {
         current: customersData.current,
         total: customersData.total,
+        currentPage: page,
+        totalPages: Math.ceil(customersData.total / 10),
         hasNext: customersData.hasNext,
         hasPrev: customersData.hasPrev
     };
@@ -50,10 +53,10 @@ export default function CustomersPage() {
         }
     });
 
-    const handleDelete = async (id: string) => {
-        if (!confirm("Are you sure you want to delete this customer?")) return;
-        await deleteCustomerMutation.mutateAsync(id);
-    };
+    // const handleDelete = async (id: string) => {
+    //     if (!confirm("Are you sure you want to delete this customer?")) return;
+    //     await deleteCustomerMutation.mutateAsync(id);
+    // };
 
     const filtered = customers.filter((c: any) => {
         const q = search.toLowerCase();
@@ -77,93 +80,137 @@ export default function CustomersPage() {
         setIsModalOpen(true);
     };
 
-    const columns = getCustomerColumns(handleEditCustomerClick, handleDelete);
+    const columns = getCustomerColumns(handleEditCustomerClick);
+
+    const counts = {
+      all: customersData?.current || 0,
+      active: customersData?.items?.filter(
+        (r: { status: string }) => r.status === CustomerStatus.ACTIVE,
+      ).length,
+      inactive: customersData?.items?.filter(
+        (r: { status: string }) => r.status === CustomerStatus.INACTIVE,
+      ).length,
+      paused: customersData?.items?.filter(
+        (r: { status: string }) => r.status === CustomerStatus.PAUSED,
+      ).length,
+    };
 
     return (
-        <div>
-            <Header
-                title="Customers"
-                subtitle={isLoading ? "Loading..." : `${pagination.total} total subscribers`}
-                actions={
-                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                        <button
-                            onClick={() => queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LIST_CUSTOMERS] })}
-                            className="btn btn-secondary btn-sm"
-                            disabled={isLoading}
-                        >
-                            <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} />
-                        </button>
-                        <button onClick={handleAddCustomerClick} className="btn btn-primary btn-sm">
-                            <Plus size={13} /> Add Customer
-                        </button>
-                    </div>
+      <div>
+        <Header
+          title="Customers"
+          subtitle={
+            isLoading ? "Loading..." : `${pagination.total} total subscribers`
+          }
+          actions={
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                onClick={() =>
+                  queryClient.invalidateQueries({
+                    queryKey: [QUERY_KEYS.LIST_CUSTOMERS],
+                  })
                 }
-            />
-
-            <AddCustomerModal
-                isOpen={isModalOpen}
-                onClose={() => {
-                    setIsModalOpen(false);
-                    setCustomerToEdit(null);
-                }}
-                onSuccess={() => {
-                    queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.LIST_CUSTOMERS] });
-                }}
-                customerToEdit={customerToEdit}
-            />
-
-            <KeyGenerationModal
-                isOpen={isKeyModalOpen}
-                onClose={() => {
-                    setIsKeyModalOpen(false);
-                    setSelectedCustomer(null);
-                }}
-                customerId={selectedCustomer?.id || ""}
-                customerName={selectedCustomer?.name || ""}
-            />
-
-            <div style={{ padding: "1.5rem" }}>
-                {/* Filters */}
-                <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1rem", flexWrap: "wrap" }}>
-                    <div className="input-group" style={{ width: 280 }}>
-                        <Search size={14} className="input-icon" />
-                        <input
-                            className="input input-with-icon"
-                            placeholder="Search customers..."
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                        />
-                    </div>
-                    <div className="tabs">
-                        {(["all", "active", "inactive", "paused"] as StatusFilter[]).map((s) => (
-                            <button key={s} className={`tab ${statusFilter === s ? "active" : ""}`} onClick={() => setStatusFilter(s)}>
-                                {s.charAt(0).toUpperCase() + s.slice(1)}
-                            </button>
-                        ))}
-                    </div>
-                    <select
-                        className="input"
-                        style={{ width: "auto" }}
-                        value={planFilter}
-                        onChange={(e) => setPlanFilter(e.target.value as PlanFilter)}
-                    >
-                        <option value="all">All Plans</option>
-                        {["Starter", "Business", "Pro", "Enterprise"].map((p) => (
-                            <option key={p} value={p}>{p}</option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Reusable Table Component */}
-                <Table
-                    columns={columns as any}
-                    data={filtered}
-                    isLoading={isLoading}
-                    emptyMessage="No customers found"
-                    pagination={pagination}
-                    onPageChange={setPage}
+                className="btn btn-secondary btn-sm"
+                disabled={isLoading}
+              >
+                <RefreshCw
+                  size={13}
+                  className={isLoading ? "animate-spin" : ""}
                 />
+              </button>
+              <button
+                onClick={handleAddCustomerClick}
+                className="btn btn-primary btn-sm"
+              >
+                <Plus size={13} /> Add Customer
+              </button>
             </div>
+          }
+        />
+
+        <AddCustomerModal
+          isOpen={isModalOpen}
+          onClose={() => {
+            setIsModalOpen(false);
+            setCustomerToEdit(null);
+          }}
+          onSuccess={() => {
+            queryClient.invalidateQueries({
+              queryKey: [QUERY_KEYS.LIST_CUSTOMERS],
+            });
+          }}
+          customerToEdit={customerToEdit}
+        />
+
+        <KeyGenerationModal
+          isOpen={isKeyModalOpen}
+          onClose={() => {
+            setIsKeyModalOpen(false);
+            setSelectedCustomer(null);
+          }}
+          customerId={selectedCustomer?.id || ""}
+          customerName={selectedCustomer?.name || ""}
+        />
+
+        <div style={{ padding: "1.5rem" }}>
+          {/* Filters */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.75rem",
+              marginBottom: "1rem",
+              flexWrap: "wrap",
+            }}
+          >
+            <div className="input-group" style={{ width: 280 }}>
+              <Search size={14} className="input-icon" />
+              <input
+                className="input input-with-icon"
+                placeholder="Search customers..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="tabs">
+              {(["all", "active", "inactive", "paused"] as StatusFilter[]).map(
+                (s) => (
+                  <button
+                    key={s}
+                    className={`tab ${statusFilter === s ? "active" : ""}`}
+                    onClick={() => setStatusFilter(s)}
+                  >
+                    {s.charAt(0).toUpperCase() + s.slice(1)}
+                    <span style={{ opacity: 0.7 }}>({counts[s]})</span>
+                  </button>
+                ),
+              )}
+            </div>
+            <select
+              className="input"
+              style={{ width: "auto" }}
+              value={planFilter}
+              onChange={(e) => setPlanFilter(e.target.value as PlanFilter)}
+            >
+              <option value="all">All Plans</option>
+              {["Starter", "Business", "Pro", "Enterprise"].map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Reusable Table Component */}
+          <Table
+            columns={columns as any}
+            data={filtered}
+            isLoading={isLoading}
+            emptyMessage="No customers found"
+            pagination={pagination}
+            onPageChange={setPage}
+          />
         </div>
+      </div>
     );
 }
