@@ -24,6 +24,7 @@ export function proxy(request: NextRequest) {
       "/requests",
       "/customers",
       "/settings",
+      "/license-keys",
       "/api",
       "/_next",
     ];

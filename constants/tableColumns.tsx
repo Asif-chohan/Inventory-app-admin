@@ -105,8 +105,6 @@ export const getRequestColumns = (handlers: {
         {
             header: "#",
             accessor: (item: any, index?: number) => {
-                console.log("Index in accessor:", index);
-                console.log("Item in accessor:", item);
                 return index !== undefined ? index + 1 : "";
             },
             cellStyle: { color: "var(--text-dim)", fontSize: 12 },
@@ -191,6 +189,104 @@ export const getLicenseKeyColumns = (onRevoke: (id: string) => void) => [
             </button>
         )
     }
+];
+
+/**
+ * ADMIN: LICENSE KEYS TABLE COLUMNS
+ */
+export const getAdminLicenseKeysColumns = (handlers: {
+  onDelete: (id: string) => void;
+  isDeleting: (id: string) => boolean;
+}) => [
+  {
+    header: "#",
+    accessor: (item: any, index?: number) => {
+      return index !== undefined ? index + 1 : "";
+    },
+    cellStyle: { color: "var(--text-dim)", fontSize: 12 },
+  },
+  {
+    header: "Key",
+    accessor: (k: any) => (
+      <div style={{ fontFamily: "monospace", fontSize: 13 }}>
+        {k.key || k.key_string || k.key_value}
+      </div>
+    ),
+  },
+  {
+    header: "Customer",
+    accessor: (k: any) => (
+      <div style={{ fontSize: 13 }}>
+        <div style={{ fontWeight: 600 }}>{k.customer_name || "-"}</div>
+        <div style={{ fontSize: 12, color: "var(--text-muted)" }}>
+          {k.customer_email || "-"}
+        </div>
+      </div>
+    ),
+  },
+  {
+    header: "Plan",
+    accessor: (k: any) => k.plan || "-",
+    cellStyle: { fontSize: 12 },
+  },
+  {
+    header: "Used",
+    accessor: (k: any) => (
+      <span
+        className={`badge ${k.is_used ? "badge-success" : "badge-muted"}`}
+        style={{ fontSize: 11 }}
+      >
+        {k.is_used ? "Used" : "Unused"}
+      </span>
+    ),
+  },
+  {
+    header: "Notes",
+    accessor: (k: any) => (
+      <div className="w-52 truncate" title={k.notes || "-"}>
+        {k.notes ?? "-"}
+      </div>
+    ),
+  },
+  {
+    header: "Created",
+    accessor: (k: any) =>
+      new Date(k.created_at).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    cellStyle: { fontSize: 12, color: "var(--text-dim)" },
+  },
+  {
+    header: "Actions",
+    accessor: (k: any) => (
+      <div style={{ display: "flex", gap: 6 }}>
+        <button
+          className="btn-icon"
+          title="Delete"
+          style={{ color: "var(--danger)" }}
+          onClick={() => handlers.onDelete(k.id || k.keyId)}
+        >
+          {handlers.isDeleting(k.id || k.keyId) ? (
+            <span
+              className="animate-spin"
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 99,
+                display: "inline-block",
+                border: "2px solid rgba(0,0,0,0.1)",
+                borderTopColor: "var(--danger)",
+              }}
+            />
+          ) : (
+            <Trash2 size={14} />
+          )}
+        </button>
+      </div>
+    ),
+  },
 ];
 
 /**

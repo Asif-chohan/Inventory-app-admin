@@ -3,11 +3,12 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-    Inbox,
-    Users,
-    MessageCircle,
-    LogOut,
-    ChevronRight,
+  Inbox,
+  Users,
+  MessageCircle,
+  LogOut,
+  ChevronRight,
+  Key,
 } from "lucide-react";
 import React, { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -34,15 +35,9 @@ export default function Sidebar() {
       select: (data) => data?.data || null,
     });
 
-    console.log("Profile data in sidebar:", profile);
-
 
     useEffect(() => {
-        const channel = supabase.channel(`requests`).subscribe((status) => {
-            if (status === "SUBSCRIBED") {
-                console.log("Subscribed to requests channel");
-            }
-        });
+        const channel = supabase.channel(`requests`).subscribe(() => {});
 
         channel.on("broadcast", { event: "new-request" }, (payload) => {
             const newCount = Number(payload?.payload?.newRequests ?? 1);
@@ -56,8 +51,9 @@ export default function Sidebar() {
     }, []);
 
     const NAV = React.useMemo(() => [
-        { label: "Requests", href: "/requests", icon: Inbox, badge: requestCount },
-        { label: "Customers", href: "/customers", icon: Users },
+      { label: "Requests", href: "/requests", icon: Inbox, badge: requestCount },
+      { label: "Customers", href: "/customers", icon: Users },
+      { label: "License Keys", href: "/license-keys", icon: Key },
     ], [requestCount]);
 
     const router = useRouter();
